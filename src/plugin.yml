@@ -1,5 +1,5 @@
 name: MineAlert
-version: 1.0
+version: 2.0
 main: me.plushymold2011.MineAlert.Main
 softdepend: [PlaceholderAPI]
 commands:

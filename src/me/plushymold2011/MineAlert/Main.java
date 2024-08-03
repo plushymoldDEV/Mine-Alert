@@ -1,12 +1,12 @@
 package me.plushymold2011.MineAlert;
 
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -36,7 +36,7 @@ public class Main extends JavaPlugin implements Listener, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(getFormattedMessage(null, "messages.command-only-by-players"));
+            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.no-console", "This command cannot be run from the console.")));
             return true;
         }
 
@@ -44,7 +44,7 @@ public class Main extends JavaPlugin implements Listener, TabCompleter {
 
         if (cmd.getName().equalsIgnoreCase("minealert")) {
             if (args.length < 1) {
-                player.sendMessage(getFormattedMessage(player, "messages.usage"));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.usage", "Usage: /minealert <command> [args]")));
                 return true;
             }
 
@@ -57,6 +57,13 @@ public class Main extends JavaPlugin implements Listener, TabCompleter {
                 case "interval":
                     showInterval(player);
                     break;
+                case "inspect":
+                    if (args.length == 2) {
+                        inspectPlayer(player, args[1]);
+                    } else {
+                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.inspect-usage", "Usage: /minealert inspect <player>")));
+                    }
+                    break;
                 case "reload":
                     reloadConfig(player);
                     break;
@@ -64,18 +71,18 @@ public class Main extends JavaPlugin implements Listener, TabCompleter {
                     if (args.length == 2) {
                         addBlock(player, args[1]);
                     } else {
-                        player.sendMessage(getFormattedMessage(player, "messages.usage").replace("<subcommand>", "addblock <block>"));
+                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.addblock-usage", "Usage: /minealert addblock <block>")));
                     }
                     break;
                 case "removeblock":
                     if (args.length == 2) {
                         removeBlock(player, args[1]);
                     } else {
-                        player.sendMessage(getFormattedMessage(player, "messages.usage").replace("<subcommand>", "removeblock <block>"));
+                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.removeblock-usage", "Usage: /minealert removeblock <block>")));
                     }
                     break;
                 default:
-                    player.sendMessage(getFormattedMessage(player, "messages.unknown-subcommand"));
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.unknown-subcommand", "Unknown subcommand. Use /minealert for help.")));
                     break;
             }
         }
@@ -84,44 +91,48 @@ public class Main extends JavaPlugin implements Listener, TabCompleter {
     }
 
     private void addBlock(Player player, String blockName) {
-        FileConfiguration config = this.getConfig();
+        FileConfiguration config = getConfig();
         if (Material.getMaterial(blockName) != null) {
             if (!config.getConfigurationSection("alerts.blocks").contains(blockName)) {
                 config.set("alerts.blocks." + blockName, true);
                 saveConfig();
-                String message = getFormattedMessage(player, "messages.block-added").replace("%block%", blockName);
-                player.sendMessage(message);
+                String message = PlaceholderAPI.setPlaceholders(player, getConfig().getString("messages.block-added", "Block %block% has been added."))
+                        .replace("%block%", blockName);
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
             } else {
-                String message = getFormattedMessage(player, "messages.block-already-added").replace("%block%", blockName);
-                player.sendMessage(message);
+                String message = PlaceholderAPI.setPlaceholders(player, getConfig().getString("messages.block-already-exists", "Block %block% already exists."))
+                        .replace("%block%", blockName);
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
             }
         } else {
-            String message = getFormattedMessage(player, "messages.block-invalid");
-            player.sendMessage(message);
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.invalid-block", "Invalid block name.")));
         }
     }
 
     private void removeBlock(Player player, String blockName) {
-        FileConfiguration config = this.getConfig();
+        FileConfiguration config = getConfig();
         if (config.getConfigurationSection("alerts.blocks").contains(blockName)) {
             config.set("alerts.blocks." + blockName, null);
             saveConfig();
-            String message = getFormattedMessage(player, "messages.block-removed").replace("%block%", blockName);
-            player.sendMessage(message);
+            String message = PlaceholderAPI.setPlaceholders(player, getConfig().getString("messages.block-removed", "Block %block% has been removed."))
+                    .replace("%block%", blockName);
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
         } else {
-            String message = getFormattedMessage(player, "messages.block-not-in-list").replace("%block%", blockName);
-            player.sendMessage(message);
+            String message = PlaceholderAPI.setPlaceholders(player, getConfig().getString("messages.block-not-exists", "Block %block% does not exist."))
+                    .replace("%block%", blockName);
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
         }
     }
 
     private void toggleNotifications(Player player) {
-        FileConfiguration config = this.getConfig();
+        FileConfiguration config = getConfig();
         boolean enabled = config.getBoolean("alerts.enabled");
         config.set("alerts.enabled", !enabled);
         saveConfig();
         String status = !enabled ? "enabled" : "disabled";
-        String message = getFormattedMessage(player, "messages.notifications-toggle").replace("%status%", status);
-        player.sendMessage(message);
+        String message = PlaceholderAPI.setPlaceholders(player, getConfig().getString("messages.notifications-toggled", "Notifications have been %status%."))
+                .replace("%status%", status);
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
     }
 
     private void showInterval(Player player) {
@@ -129,20 +140,33 @@ public class Main extends JavaPlugin implements Listener, TabCompleter {
         long interval = 86400000L; // 24 hours in milliseconds
         long timeLeft = (lastAlertTime + interval) - currentTime;
 
+        String message;
         if (timeLeft > 0) {
             String timeLeftStr = formatElapsedTime(timeLeft);
-            String message = getFormattedMessage(player, "messages.time-left").replace("%time_left%", timeLeftStr);
-            player.sendMessage(message);
+            message = PlaceholderAPI.setPlaceholders(player, getConfig().getString("messages.time-left", "Time left: %time_left%"))
+                    .replace("%time_left%", timeLeftStr);
         } else {
-            String message = getFormattedMessage(player, "messages.data-reset");
-            player.sendMessage(message);
+            message = getConfig().getString("messages.data-reset", "Data has been reset.");
+        }
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
+    }
+
+    private void inspectPlayer(Player player, String targetName) {
+        Player target = getServer().getPlayer(targetName);
+
+        if (target != null) {
+            String message = PlaceholderAPI.setPlaceholders(player, getConfig().getString("messages.inspect-player", "Inspecting player %player%."))
+                    .replace("%player%", targetName);
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
+            // Add more detailed player mine data here
+        } else {
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.player-not-found", "Player %player% not found.")).replace("%player%", targetName));
         }
     }
 
     private void reloadConfig(Player player) {
         this.reloadConfig();
-        String message = getFormattedMessage(player, "messages.config-reloaded");
-        player.sendMessage(message);
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.config-reloaded", "Configuration has been reloaded.")));
     }
 
     @EventHandler
@@ -151,24 +175,28 @@ public class Main extends JavaPlugin implements Listener, TabCompleter {
         Block block = event.getBlock();
         Material blockType = block.getType();
 
-        FileConfiguration config = this.getConfig();
+        FileConfiguration config = getConfig();
         if (config.getBoolean("alerts.enabled") && config.getConfigurationSection("alerts.blocks").getBoolean(blockType.name(), false)) {
             if (!alertedBlocks.contains(block)) {
                 Set<Block> countedBlocks = new HashSet<>();
                 int count = countVeinBlocks(block, blockType, countedBlocks);
-
+                
+                // Get the current time
                 long currentTime = System.currentTimeMillis();
+                
+                // Calculate elapsed time
                 long elapsedMillis = currentTime - lastAlertTime;
                 lastAlertTime = currentTime; // Update last alert time
-
+                
+                // Format elapsed time
                 String elapsedTime = formatElapsedTime(elapsedMillis);
-
-                String message = getFormattedMessage(player, "alerts.alert-message")
+                
+                String message = PlaceholderAPI.setPlaceholders(player, getConfig().getString("alerts.alert-message", "Player %player% mined %vein_amount% %block_type% blocks. Last notification was %last_notification%."))
                         .replace("%player%", player.getName())
                         .replace("%vein_amount%", String.valueOf(count))
                         .replace("%block_type%", blockType.name().toLowerCase().replace("_", " "))
                         .replace("%last_notification%", elapsedTime);
-
+                
                 alertPlayers(message);
                 alertedBlocks.addAll(countedBlocks);  // Add the counted blocks to the alertedBlocks set
             }
@@ -196,7 +224,7 @@ public class Main extends JavaPlugin implements Listener, TabCompleter {
     private void alertPlayers(String message) {
         for (Player player : getServer().getOnlinePlayers()) {
             if (player.hasPermission("minealert.notifications.receive")) {
-                player.sendMessage(message);
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
             }
         }
     }
@@ -215,37 +243,11 @@ public class Main extends JavaPlugin implements Listener, TabCompleter {
         }
     }
 
-    private String getFormattedMessage(Player player, String path) {
-        FileConfiguration config = this.getConfig();
-        String message = config.getString(path);
-
-        if (message == null) {
-            return ChatColor.translateAlternateColorCodes('&', "Message path '" + path + "' not found in config.");
-        }
-
-        // Check if PlaceholderAPI is present and replace placeholders
-        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            if (player != null) {
-                message = PlaceholderAPI.setPlaceholders(player, message); // Replace player-specific placeholders
-            } else {
-                message = PlaceholderAPI.setPlaceholders(null, message); // Replace global placeholders
-            }
-        }
-
-        // Convert color codes
-        return ChatColor.translateAlternateColorCodes('&', message);
-    }
-
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
         List<String> completions = new ArrayList<>();
         if (args.length == 1) {
-            completions.add("notifications");
-            completions.add("interval");
-            completions.add("inspect");
-            completions.add("reload");
-            completions.add("addblock");
-            completions.add("removeblock");
+            Collections.addAll(completions, "notifications", "interval", "inspect", "reload", "addblock", "removeblock");
         } else if (args.length == 2) {
             if ("inspect".equalsIgnoreCase(args[0])) {
                 for (Player p : getServer().getOnlinePlayers()) {
