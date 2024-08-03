@@ -1,0 +1,29 @@
+# Minealert Plugin Configuration
+alerts:
+  enabled: true
+  blocks:
+    # List of blocks to be alerted about
+    DIAMOND_ORE: true
+    GOLD_ORE: true
+    IRON_ORE: true
+    COAL_ORE: true
+  alert-message: '&7[&c&l&oX-RAY&r&7] &a%player% &ehas mined &a%vein_amount% %block_type%''s &eLast notification: &a%last_notification%'
+
+
+messages:
+  usage: '&7Usage: /minealert <subcommand> [options]'
+  unknown-subcommand: '&cUnknown subcommand. Use notifications, interval, inspect,
+    reload, addblock, or removeblock.'
+  block-added: '&aBlock %block% added to notifications.'
+  block-already-added: '&cBlock %block% is already in the notification list.'
+  block-invalid: '&cInvalid block name.'
+  block-removed: '&aBlock %block% removed from notifications.'
+  block-not-in-list: '&cBlock %block% is not in the notification list.'
+  notifications-enabled: '&aNotifications are now enabled.'
+  notifications-disabled: '&cNotifications are now disabled.'
+  time-left: '&7Time left before data caches and resets: %time_left%'
+  data-reset: '&7The data cache has been reset.'
+  inspecting-player: '&7Inspecting player: %player%'
+  player-not-found: '&cPlayer not found.'
+  config-reloaded: '&aConfiguration files have been reloaded.'
+  command-only-by-players: '&cThis command can only be executed by players.'

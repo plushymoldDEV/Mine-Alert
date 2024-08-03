@@ -1,0 +1,22 @@
+name: MineAlert
+version: 1.0
+main: me.plushymold2011.MineAlert.Main
+softdepend: [PlaceholderAPI]
+commands:
+  minealert:
+    description: MineAlert command
+    usage: /<command>
+    aliases: [ma]
+permissions:
+  minealert.notification.add:
+    description: Permission to add notifications
+    default: op
+  minealert.notification.remove:
+    description: Permission to remove notifications
+    default: op
+  minealert.notification.toggle:
+    description: Permission to toggle notifications
+    default: op
+  minealert.notifications.receive:
+    description: Permission to receive notifications
+    default: true
