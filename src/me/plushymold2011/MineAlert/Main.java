@@ -139,19 +139,6 @@ public class Main extends JavaPlugin implements Listener, TabCompleter {
         }
     }
 
-    private void inspectPlayer(Player player, String targetName) {
-        Player target = getServer().getPlayer(targetName);
-
-        if (target != null) {
-            String message = getFormattedMessage(player, "messages.inspect-player").replace("%player%", targetName);
-            player.sendMessage(message);
-            // Add more detailed player mine data here
-        } else {
-            String message = getFormattedMessage(player, "messages.player-not-found").replace("%player%", targetName);
-            player.sendMessage(message);
-        }
-    }
-
     private void reloadConfig(Player player) {
         this.reloadConfig();
         String message = getFormattedMessage(player, "messages.config-reloaded");
